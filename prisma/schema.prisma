@@ -1,0 +1,81 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  name            String
+  symbol          String
+  chain           String   @default("solana")
+  mintAddress     String   @unique
+  contractAddress String?
+  network         String   @default("mainnet")
+  description     String?
+  website         String?
+  imageUrl        String?
+  totalSupply     Float?
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  tokens          Token[]
+  holders         Holder[]
+  events          Event[]
+}
+
+model Token {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name            String
+  symbol          String
+  chain           String   @default("solana")
+  contractAddress String   @unique
+  decimals        Int      @default(9)
+  supply          Float?
+  price           Float?
+  marketCap       Float?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Holder {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  walletAddress String
+  chain         String   @default("solana")
+  balance       Float
+  percentage    Float?
+  isWhale       Boolean  @default(false)
+  riskScore     String?
+  aiNotes       String?
+  firstSeen     DateTime @default(now())
+  lastUpdated   DateTime @updatedAt
+
+  @@unique([projectId, walletAddress])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  type      String
+  severity  String   @default("info")
+  message   String
+  createdAt DateTime @default(now())
+}
+
+model AiAnalysis {
+  id           String   @id @default(cuid())
+  entityType   String
+  entityId     String
+  analysisType String
+  result       String
+  confidence   Float?
+  createdAt    DateTime @default(now())
+}
